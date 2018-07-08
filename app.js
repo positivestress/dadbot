@@ -226,12 +226,12 @@ client.on('message', message => {
 
     if(message.content === "!grass")
     {
-        message.channel.sendFile('./grass.png');
+        message.channel.sendFile('https://cdn.discordapp.com/attachments/433386476978307072/465365510096289792/grass.png');
     }
 
     if(message.content === "!sfw")
     {
-        message.channel.sendFile('./sasuke.png');
+        message.channel.sendFile('https://cdn.discordapp.com/attachments/433386476978307072/465392719234334723/sasuke.png');
     }
     
     // if(message.content === "!sfwwwww")
