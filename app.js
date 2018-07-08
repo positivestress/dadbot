@@ -12,6 +12,14 @@ client.on('ready', () => {
     console.log("running");
 });
 
+/*
+
+THIS BOT IS A WORK IN PROGRESS!
+IT'S A MESS!
+PLEASE BE NICE TO ME!
+
+/*
+
 // async function latest(url)
 // {
 //     let feed = await parser.parseURL(url);
