@@ -308,10 +308,6 @@ client.on('message', message => {
         message.react("465295260306898944");
         return;
     }
-    if(message.content.startsWith("!test"))
-    {
-        message.channel.send(message.content);
-    }
 
 });
 
