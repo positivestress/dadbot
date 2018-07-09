@@ -12,6 +12,7 @@ client.on('ready', () => {
     console.log("running");
 });
 
+// THIS BOT IS A MESS. PLEASE DON'T JUDGE ME. IT'S A WORK IN PROGRESS AND I'VE NEVER DONE THIS BEFORE
 
 // async function latest(url)
 // {
@@ -266,7 +267,7 @@ client.on('message', message => {
                             if(val != item.last_updated){
                                 let newEpisode = feeds.latest(item.url);
                                 newEpisode.then(function(value) {
-                                    message.channel.send(`New episode detected from ${value.title}! ${value.item.link}`);
+                                    client.channels.get("430714070681780244").send(`New episode detected from ${value.title}! ${value.item.link}`);
                                     let updated = { $set: {title: item.title, url: item.url, last_updated: val} };
                                     dbo.collection("feeds").updateOne({title: item.title}, updated, function(err, res) {
                                         if(err) throw err;
