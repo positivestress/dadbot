@@ -1,0 +1,20 @@
+Dadbot from HKIPGTD discord.
+
+to run: 
+
+* Set up bot configuration on discord and receive a bot token:
+    https://github.com/jagrosh/MusicBot/wiki/Adding-Your-Bot-To-Your-Server
+
+* Invite the bot to your own server:
+    https://github.com/jagrosh/MusicBot/wiki/Adding-Your-Bot-To-Your-Server
+
+* Create a file called settings.json and add the token to it. 'settings-example.json' is an example of such a file.    
+
+* Run Mongo DB with docker-compose. In the given docker-compose.yml, the DB data will be kept in the 'dbstore' directory.:
+    docker-compose up
+
+* Install bot dependencies:
+    npm install
+
+* Run the bot:
+    node ./app.js
