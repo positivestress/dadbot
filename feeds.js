@@ -59,20 +59,6 @@ function parseAdd(message)
 async function list()
 {
     let result = [];
-    // MongoClient.connect(mongourl, function(err, db) {
-    //     let dbo = db.db("bot");
-    //     dbo.collection("feeds", function(err, collection) {
-    //         // assert.equal("null, err");
-    //         var cursor = collection.find();
-    //         cursor.forEach(function(item) {
-    //             let thisItem = {};
-    //             // thisItem.name = item.name; DOES NOT WORK YET
-    //             thisItem.title = item.title;
-    //             thisItem.url = item.url;
-    //             result.push(thisItem);
-    //         });
-    //     });
-    // });
     result = await getAllFeeds();
     return result;
 }
@@ -96,29 +82,6 @@ async function getAllFeeds()
     });
     return await result;
 }
-
-// MongoClient.connect(mongourl, function(err, db){
-//     let dbo = db.db("bot");
-//     dbo.collection("feeds", function(err, collection){
-//         assert.equal(null, err);
-//         var cursor = collection.find();
-//         cursor.forEach(function(item){
-//             let latestEpisode = feeds.checkForUpdate(item.url);
-//             latestEpisode.then(function(val) {
-//                 if(val != item.last_updated){
-//                     let newEpisode = feeds.latest(item.url);
-//                     newEpisode.then(function(value) {
-//                         message.channel.send(`New episode detected from ${value.title}! ${value.item.link}`);
-//                         let updated = { $set: {title: item.title, url: item.url, last_updated: val} };
-//                         dbo.collection("feeds").updateOne({title: item.title}, updated, function(err, res) {
-//                             if(err) throw err;
-//                         })
-//                     });
-//                 }
-//             });
-//         });
-//     });
-// });
 
 module.exports.checkForUpdate = checkForUpdate;
 module.exports.latest = latest;

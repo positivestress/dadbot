@@ -14,52 +14,6 @@ client.on('ready', () => {
 
 // THIS BOT IS A MESS. PLEASE DON'T JUDGE ME. IT'S A WORK IN PROGRESS AND I'VE NEVER DONE THIS BEFORE
 
-// async function latest(url)
-// {
-//     let feed = await parser.parseURL(url);
-//     let result = {};
-//     result.title = feed.title;
-//     if(feed.items[0].enclosure)
-//         result.item = feed.items[0];
-//     else result.item = feed.items[1];
-//     return result;
-// };
-
-// async function checkForUpdate(url)
-// {
-//     let feed = await parser.parseURL(url);
-//     if(feed.items[0].enclosure)
-//         return feed.items[0].isoDate;
-//     else return feed.items[1].isoDate;
-// }
-
-// async function verify(url)
-// {
-//     try
-//     {
-//         let episode = await feeds.latest(url);
-//         return episode.item.isoDate;
-//     }
-//     catch (err) { return false; }
-// }
-
-// function parseAdd(message)
-// {
-//     let result = {};
-//     let space;
-//     for(var i = 0; i < message.length; i++)
-//     {
-//         if(message[i] == ' ')
-//         {
-//             space = i;
-//             break;
-//         }
-//     }
-//     if(i == message.length) return false;
-//     result.title = message.substring(0, space);
-//     result.url = message.substring(space + 1);
-//     return result;
-// }
 
 function hasAccess(user)
 {
@@ -120,30 +74,6 @@ client.on('message', message => {
         });
     }
 
-/*
-
-    if(message.content === "!feeds")
-    {
-        let feedList = feeds.list();
-        feedList.then(function(val){
-            console.log(val);
-        })
-        // feedList.then(function(list){
-        //     message.channel.send({embed: {
-        //         color: 344703,
-        //         title: "Podcast feeds",
-        //         description: list.toString()
-        //     }});
-        // });
-
-        // message.channel.send({embed: {
-        //     color: 344703,
-        //     title: "Podcast feeds",
-        //     description: feedList.toString()
-        // }});
-    }
-
-    */
     
     if(message.content.startsWith("!addfeed "))
     {
@@ -235,12 +165,6 @@ client.on('message', message => {
         message.channel.sendFile('https://cdn.discordapp.com/attachments/433386476978307072/465392719234334723/sasuke.png');
     }
     
-    // if(message.content === "!sfwwwww")
-    // {
-    //     message.channel.sendFile('./saaaaasuke.png');
-    // }
-
-
     if(message.content.startsWith("!embiggen "))
     {   
         let emoji = parseEmoji(message.content);
