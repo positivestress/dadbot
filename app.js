@@ -33,7 +33,7 @@ client.on("message", (message) => {
 });
 
 client.on("guildMemberRemove", (member) => {
-    if(member.roles.exists("name", "Whomst")){
+    if(member.roles.exists("name", "Whomst?")){
         deleteWelcomeMessage(member.id, member.guild.channels.find(channel => channel.name == "introductions"));
     }
 });
