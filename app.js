@@ -2,7 +2,14 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const settings = require('./settings.json');
 
-var welcomeMessages = []
+class welcomeMessage{
+    constructor(userID, messageID){
+        this.userID = userID,
+        this.messageID = messageID
+    }
+}
+
+var welcomeMessages = [];
 
 client.on('ready', () => {
     console.log("running");
@@ -10,35 +17,39 @@ client.on('ready', () => {
 
 client.on("guildMemberAdd", (member) => {
     member.addRole(member.guild.roles.find(role => role.name == "Whomst?"));
-    let channel = member.guild.channels.find(ch => ch.name === "introductions");
-    let rules = member.guild.channels.find(ch => ch.name === "rules");
+    let channel = member.guild.channels.find(channel => channel.name == "introductions");
+    let rules = member.guild.channels.find(channel => channel.name == "rules");
     channel.send(`Welcome, ${member}! At the moment you can only post here, so please read the ${rules} and then introduce yourself (name, age, pronouns, social media, whatever you might want people to know about you) to get access to the rest of the server!`)
-    .then(msg => welcomeMessages.push([member.id, msg.id]));
+    .then(msg => welcomeMessages.push(new welcomeMessage(member.id, msg.id)));
 });
 
 client.on("message", (message) => {
     let whomst = message.guild.roles.find(role => role.name == "Whomst?");
     if(message.content.length > 6 &&  message.member.roles.exists("name", "Whomst?")){
         message.member.removeRole(whomst);
-        let toDelete = findWelcomeMessage(message.member.id);
-        message.channel.fetchMessage(toDelete)
-        .then(msgToDelete => {
-            msgToDelete.delete();
-            message.react("👋");
-        });
+        deleteWelcomeMessage(message.member.id, message.channel);
+        message.react("👋");
     }
 });
 
-function findWelcomeMessage(userID){
+client.on("guildMemberRemove", (member) => {
+    if(member.roles.exists("name", "Whomst")){
+        deleteWelcomeMessage(member.id, member.guild.channels.find(channel => channel.name == "introductions"));
+    }
+});
+
+function deleteWelcomeMessage(userID, channel){
     for(let i = 0; i < welcomeMessages.length; i++){
-        if(welcomeMessages[i][0] == userID){
-            let messageID = welcomeMessages[i][1]
+        if(welcomeMessages[i].userID == userID){
+            let messageID = welcomeMessages[i].messageID;
             welcomeMessages[i] = welcomeMessages[welcomeMessages.length - 1];
             welcomeMessages.pop();
-            return messageID;
+            channel.fetchMessage(messageID)
+            .then(toDelete => {
+                toDelete.delete();
+            })
         }
     }
 }
-
 
 client.login(settings.token);
