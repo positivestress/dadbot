@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const settings = require('./settings.json');
+const feeds = require("./feeds.js");
 
 class welcomeMessage{
     constructor(userID, messageID){
@@ -10,6 +11,12 @@ class welcomeMessage{
 }
 
 var welcomeMessages = [];
+
+function hasAccess(user)
+{
+    if(user.permissions.has("ADMINISTRATOR")) return true;
+    else return false;
+}
 
 client.on('ready', () => {
     console.log("running");
@@ -24,11 +31,27 @@ client.on("guildMemberAdd", (member) => {
 });
 
 client.on("message", (message) => {
-    let whomst = message.guild.roles.find(role => role.name == "Whomst?");
     if(message.content.length > 6 &&  message.member.roles.exists("name", "Whomst?")){
+        let whomst = message.guild.roles.find(role => role.name == "Whomst?");
         message.member.removeRole(whomst);
         deleteWelcomeMessage(message.member.id, message.channel);
         message.react("👋");
+    }
+    else if(message.content.startsWith("!addfeed ")){
+        if(!hasAccess(message.member)) message.channel.send("You can't do that!");
+        else{
+            let input = message.content.substring(9);
+            feeds.addFeed(input);
+        }
+    }
+    else if(message.content == "!latest invasion angle")
+    {
+        message.channel.send("Fuck off.");
+    }
+    else if(message.content.startsWith("!latest "))
+    {
+        let input = message.content.substring(8);
+        feeds.latest(input, message.channel);
     }
 });
 
