@@ -8,13 +8,45 @@ var DOMParser = require("domparser").DOMParser;
 var xhttp = new XMLHttpRequest();
 var parser = new DOMParser();
 
-function addFeed(input)
+function addFeed(input, channel)
 {
     let toAdd = parseAdd(input);
-    MongoClient.connect(mongourl, (err, db) => {
-        let dbo = db.db("bot");
-        dbo.collection("feeds").insert(toAdd);
-    });
+    if(!toAdd){
+        channel.send("Failed to add feed. Make sure your request is in the format: \"!addfeed title url\".");
+        return;
+    }
+    try{
+        xhttp.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 200)
+            {
+                let response = parser.parseFromString(this.responseText);
+                let items = response.getElementsByTagName("item");
+                for(let i = 0; i < items.length; i++){
+                    if(isEpisode(items[i]))
+                    {
+                        MongoClient.connect(mongourl, (err, db) => {
+                            let dbo = db.db("bot");
+                            dbo.collection("feeds").findOne({title: toAdd.title}).then(res => {
+                                if(res){
+                                    channel.send(`The title "${toAdd.title}" is already in use.`);
+                                    return;
+                                }
+                                else{
+                                    dbo.collection("feeds").insert(toAdd);
+                                    channel.send(`Successfully added ${toAdd.title}.`);
+                                    return;
+                                }
+                            });
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+        xhttp.open("GET", toAdd.url);
+        xhttp.send();
+    }
+    catch(err) { channel.send("Failed to add feed. Make sure you are using a valid RSS feed URL."); return; }
 }
 
 function latest(title, channel){
@@ -69,6 +101,32 @@ function isEpisode(item)
         if(categories[i].textContent == "Episodes") return true;
     }
     return false;
+}
+
+async function verify(url)
+{
+    try{
+        xhttp.onreadystatechange = function(){
+            if(this.readyState == 4 && this.status == 200)
+            {
+                let response = parser.parseFromString(this.responseText);
+                let items = response.getElementsByTagName("item");
+                for(let i = 0; i < items.length; i++){
+                    if(isEpisode(items[i]))
+                    {
+                        MongoClient.connect(mongourl, (err, db) => {
+                            let dbo = db.db("bot");
+                            dbo.collection("feeds").insert();
+                        });
+                        channel.send(`Successfully added ${toAdd.title}.`);
+                    }
+                }
+            }
+        }
+        xhttp.open("GET", url);
+        xhttp.send();
+    }
+    catch(err) { return false; }
 }
 
 module.exports.addFeed = addFeed;

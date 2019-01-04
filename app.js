@@ -41,7 +41,7 @@ client.on("message", (message) => {
         if(!hasAccess(message.member)) message.channel.send("You can't do that!");
         else{
             let input = message.content.substring(9);
-            feeds.addFeed(input);
+            feeds.addFeed(input, message.channel);
         }
     }
     else if(message.content == "!latest invasion angle")
