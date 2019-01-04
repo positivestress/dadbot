@@ -26,14 +26,17 @@ function addFeed(input, channel)
                     {
                         MongoClient.connect(mongourl, (err, db) => {
                             let dbo = db.db("bot");
-                            dbo.collection("feeds").findOne({title: toAdd.title}).then(res => {
+                            dbo.collection("feeds").findOne({slug: toAdd.slug}).then(res => {
                                 if(res){
-                                    channel.send(`The title "${toAdd.title}" is already in use.`);
+                                    channel.send(`The name "${toAdd.slug}" is already in use.`);
                                     return;
                                 }
                                 else{
+                                    toAdd.link = response.getElementsByTagName("channel")[0].getElementsByTagName("link")[0].textContent;
+                                    toAdd.title = response.getElementsByTagName("channel")[0].getElementsByTagName("title")[0].textContent;
+                                    toAdd.lastUpdated = items[i].getElementsByTagName("pubDate")[0].textContent;
                                     dbo.collection("feeds").insert(toAdd);
-                                    channel.send(`Successfully added ${toAdd.title}.`);
+                                    channel.send(`Successfully added ${toAdd.slug}.`);
                                     return;
                                 }
                             });
@@ -43,18 +46,36 @@ function addFeed(input, channel)
                 }
             }
         }
-        xhttp.open("GET", toAdd.url);
+        xhttp.open("GET", toAdd.feedURL);
         xhttp.send();
     }
     catch(err) { channel.send("Failed to add feed. Make sure you are using a valid RSS feed URL."); return; }
 }
 
-function latest(title, channel){
+function removeFeed(input, channel){
     MongoClient.connect(mongourl, (err, db) => {
         let dbo = db.db("bot");
-        dbo.collection("feeds").findOne({title: title})
+        dbo.collection("feeds").findOne({slug: input})
+        .then(response => {
+            if(!response) channel.send(`There is no feed with the title "${input}".`);
+            else{
+                dbo.collection("feeds").remove({slug: input});
+                channel.send("Feed removed.");
+            }
+        });
+    });
+}
+
+function latest(slug, channel){
+    MongoClient.connect(mongourl, (err, db) => {
+        let dbo = db.db("bot");
+        dbo.collection("feeds").findOne({slug: slug})
         .then(response => { 
-            let url = response.url;
+            if(!response){
+                channel.send(`There is no feed with the title "${slug}".`);
+                return;
+            }
+            let url = response.feedURL;
             xhttp.onreadystatechange = function(){
                 if(this.readyState == 4 && this.status == 200){
                     let response = parser.parseFromString(this.responseText);
@@ -74,6 +95,64 @@ function latest(title, channel){
     });
 }
 
+function list(channel){
+    MongoClient.connect(mongourl, (err, db) => {
+        let dbo = db.db("bot");
+        let output = "";
+        dbo.collection("feeds").find().forEach(item => {
+            output += `\`${item.slug}\`: **${item.title}** (<${item.link}>)\n`;
+        }).then(() => {
+            channel.send(output);
+        });
+    });
+}
+
+function checkForUpdates(channel){
+    let requests = [];
+    let check = function(){
+        if(this.readyState == 4 && this.status == 200)
+        {
+            let response = parser.parseFromString(this.responseText);
+            let title = response.getElementsByTagName("channel")[0].getElementsByTagName("title")[0].textContent;
+            let items = response.getElementsByTagName("item");
+            for(let i = 0; i < items.length; i++){
+                if(isEpisode(items[i]))
+                {
+                    MongoClient.connect(mongourl, (err, db) => {
+                        let dbo = db.db("bot");
+                        dbo.collection("feeds").findOne({title: title}).then(res => {
+                            let newest = items[i].getElementsByTagName("pubDate")[0].textContent;
+                            if(newest != res.lastUpdated){
+                                let episodeLink = items[i].getElementsByTagName("link")[0].textContent;
+                                channel.send(`New episode of ${title}! ${episodeLink}`);
+                                dbo.collection("feeds").updateOne({title: title}, {$set: {lastUpdated: newest}});
+                            }
+                        });
+                    });
+                    break;
+                }
+            }
+        }
+    }
+    MongoClient.connect(mongourl, (err, db) => {
+        let dbo = db.db("bot");
+        dbo.collection("feeds").find().forEach(item => {
+            var request = new XMLHttpRequest();
+            request.open("GET", item.feedURL);
+            request.onreadystatechange = check;
+            requests.push(request);
+        }).then(() => {
+            requests.forEach(req => {
+                req.send();
+            });
+        });
+    });
+}
+
+function postUpdate(channel){
+
+}
+
 function parseAdd(message)
 {
     let result = {};
@@ -87,8 +166,8 @@ function parseAdd(message)
         }
     }
     if(i == message.length) return false;
-    result.title = message.substring(0, space);
-    result.url = message.substring(space + 1);
+    result.slug = message.substring(0, space);
+    result.feedURL = message.substring(space + 1);
     return result;
 }
 
@@ -103,31 +182,8 @@ function isEpisode(item)
     return false;
 }
 
-async function verify(url)
-{
-    try{
-        xhttp.onreadystatechange = function(){
-            if(this.readyState == 4 && this.status == 200)
-            {
-                let response = parser.parseFromString(this.responseText);
-                let items = response.getElementsByTagName("item");
-                for(let i = 0; i < items.length; i++){
-                    if(isEpisode(items[i]))
-                    {
-                        MongoClient.connect(mongourl, (err, db) => {
-                            let dbo = db.db("bot");
-                            dbo.collection("feeds").insert();
-                        });
-                        channel.send(`Successfully added ${toAdd.title}.`);
-                    }
-                }
-            }
-        }
-        xhttp.open("GET", url);
-        xhttp.send();
-    }
-    catch(err) { return false; }
-}
-
 module.exports.addFeed = addFeed;
 module.exports.latest = latest;
+module.exports.removeFeed = removeFeed;
+module.exports.list = list;
+module.exports.checkForUpdates = checkForUpdates;

@@ -20,6 +20,11 @@ function hasAccess(user)
 
 client.on('ready', () => {
     console.log("running");
+    let podcastsChannel = client.channels.find("id", "430714070681780244");
+    //let testChannel = client.channels.find("id", "431145275118190623");
+    setInterval(() => {
+        feeds.checkForUpdates(podcastsChannel);
+    }, 120000);
 });
 
 client.on("guildMemberAdd", (member) => {
@@ -37,18 +42,33 @@ client.on("message", (message) => {
         deleteWelcomeMessage(message.member.id, message.channel);
         message.react("👋");
     }
-    else if(message.content.startsWith("!addfeed ")){
+    else if(message.content == ".help"){
+        if(!hasAccess(message.member)) message.channel.send("`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.");
+        else message.channel.send("Hosts:\n`.addfeed [title] [feed URL]` to add a podcast feed.\n`.removefeed [title]` to remove a podcast feed.\n\nEveryone:\n`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.");
+    }
+    else if(message.content.startsWith(".addfeed ")){
         if(!hasAccess(message.member)) message.channel.send("You can't do that!");
         else{
             let input = message.content.substring(9);
             feeds.addFeed(input, message.channel);
         }
     }
-    else if(message.content == "!latest invasion angle")
+    else if(message.content.startsWith(".removefeed ")){
+        if(!hasAccess(message.member)) message.channel.send("You can't do that!");
+        else{
+            let input = message.content.substring(12);
+            feeds.removeFeed(input, message.channel);
+        }
+    }
+    else if(message.content == ".list")
+    {
+        feeds.list(message.channel);
+    }
+    else if(message.content == ".latest invasion angle")
     {
         message.channel.send("Fuck off.");
     }
-    else if(message.content.startsWith("!latest "))
+    else if(message.content.startsWith(".latest "))
     {
         let input = message.content.substring(8);
         feeds.latest(input, message.channel);
