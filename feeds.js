@@ -149,10 +149,6 @@ function checkForUpdates(channel){
     });
 }
 
-function postUpdate(channel){
-
-}
-
 function parseAdd(message)
 {
     let result = {};

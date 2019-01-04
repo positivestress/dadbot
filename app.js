@@ -24,7 +24,7 @@ client.on('ready', () => {
     //let testChannel = client.channels.find("id", "431145275118190623");
     setInterval(() => {
         feeds.checkForUpdates(podcastsChannel);
-    }, 120000);
+    }, 300000);
 });
 
 client.on("guildMemberAdd", (member) => {
@@ -43,8 +43,8 @@ client.on("message", (message) => {
         message.react("👋");
     }
     else if(message.content == ".help"){
-        if(!hasAccess(message.member)) message.channel.send("`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.");
-        else message.channel.send("Hosts:\n`.addfeed [title] [feed URL]` to add a podcast feed.\n`.removefeed [title]` to remove a podcast feed.\n\nEveryone:\n`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.");
+        if(!hasAccess(message.member)) message.channel.send("`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.\n`.updatefeeds` to check for new episodes.");
+        else message.channel.send("Hosts:\n`.addfeed [title] [feed URL]` to add a podcast feed.\n`.removefeed [title]` to remove a podcast feed.\n\nEveryone:\n`.latest [title]` to get the latest episode of a podcast.\n`.list` to display all of the tracked podcasts.\n`.updatefeeds` to check for new episodes.");
     }
     else if(message.content.startsWith(".addfeed ")){
         if(!hasAccess(message.member)) message.channel.send("You can't do that!");
@@ -63,6 +63,10 @@ client.on("message", (message) => {
     else if(message.content == ".list")
     {
         feeds.list(message.channel);
+    }
+    else if(message.content == ".updatefeeds")
+    {
+        feeds.checkForUpdates(message.channel);
     }
     else if(message.content == ".latest invasion angle")
     {
