@@ -66,6 +66,7 @@ client.on("message", (message) => {
     }
     else if(message.content == ".updatefeeds")
     {
+        message.channel.send("Checking for new episodes...");
         feeds.checkForUpdates(message.channel);
     }
     else if(message.content == ".latest invasion angle")
