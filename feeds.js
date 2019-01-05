@@ -245,7 +245,7 @@ function prepareForFormatting(textContent){
             continue;
         }
         let contents = "";
-        for(let j = i; textContent[j] != '<'; j++){
+        for(let j = i; textContent[j] != '<' && j < textContent.length; j++){
             contents += textContent[j];
             i++;
         }
