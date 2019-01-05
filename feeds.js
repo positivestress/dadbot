@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const client = new Discord.Client();
 const MongoClient = require('mongodb').MongoClient
 const mongourl = "mongodb://localhost:27017/bot";
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
@@ -99,10 +98,12 @@ function list(channel){
     MongoClient.connect(mongourl, (err, db) => {
         let dbo = db.db("bot");
         let output = "";
+        let embed = new Discord.RichEmbed().setColor(0x9999FF).setTitle("Podcasts");
         dbo.collection("feeds").find().forEach(item => {
-            output += `\`${item.slug}\`: **${item.title}** (<${item.link}>)\n`;
+            output += `\`${item.slug}\` - **[${item.title}](${item.link})**\n`;
         }).then(() => {
-            channel.send(output);
+            embed.setDescription(output);
+            channel.send(embed);
         });
     });
 }

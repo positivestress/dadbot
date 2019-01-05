@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const settings = require('./settings.json');
 const feeds = require("./feeds.js");
+const handler = require("./handler.js");
 
 class welcomeMessage{
     constructor(userID, messageID){
@@ -21,7 +22,7 @@ function hasAccess(user)
 client.on('ready', () => {
     console.log("running");
     let podcastsChannel = client.channels.find("id", "430714070681780244");
-    //let testChannel = client.channels.find("id", "431145275118190623");
+    let testChannel = client.channels.find("id", "431145275118190623");
     setInterval(() => {
         feeds.checkForUpdates(podcastsChannel);
     }, 300000);
@@ -78,6 +79,23 @@ client.on("message", (message) => {
         let input = message.content.substring(8);
         feeds.latest(input, message.channel);
     }
+    // else if(message.content == ".embed")
+    // {
+    //     let embed = new Discord.RichEmbed()
+    //     .setTitle("Embed Title")
+    //     .setColor(0xFF0000)
+    //     .setDescription("Test embed description")
+    //     .setURL("http://noisespace.xyz")
+    //     .addField("TestField", "[This is a test field](http://noisespace.xyz)", true);
+    //     message.channel.send(embed);
+    // }
+    // else if(message.content == ".error")
+    // {
+    //     try{
+    //         handler.error();
+    //     }
+    //     catch(err) { message.channel.send(err); }
+    // }
 });
 
 client.on("guildMemberRemove", (member) => {
