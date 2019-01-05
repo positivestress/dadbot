@@ -81,8 +81,17 @@ function latest(slug, channel){
                     let items = response.getElementsByTagName("item");
                     for(let i = 0; i < items.length; i++){
                         if(isEpisode(items[i])){
-                            let result = items[i].getElementsByTagName("link")[0].textContent;
-                            channel.send(result);
+                            let embed = new Discord.RichEmbed();
+                            let title = items[i].getElementsByTagName("title")[0].textContent;
+                            let link = items[i].getElementsByTagName("link")[0].textContent;
+                            let description = items[i].getElementsByTagName("description")[0].textContent;
+                            description = cleanText(description);
+                            let temp = document.createElement("textarea");
+                            temp.innerHTML = description;
+                            description = temp.innerHTML;
+                            embed.setTitle(title).setURL(link).setDescription(cleanText(description));
+                            channel.send(`Latest episode of ${title}:`);
+                            channel.send(embed);
                             return;
                         }
                     }
@@ -177,6 +186,26 @@ function isEpisode(item)
         if(categories[i].textContent == "Episodes") return true;
     }
     return false;
+}
+
+function cleanText(textContent){
+    let output = "";
+    let inTag = false;
+    for(let i = 0; i < textContent.length; i++){
+        if(textContent[i] == '<'){
+            inTag = true;
+            continue;
+        }
+        if(inTag && textContent[i] != '>'){
+            continue;
+        }
+        if(inTag && textContent[i] == '>'){
+            inTag = false;
+            continue;
+        }
+        output += textContent[i];
+    }
+    return output;
 }
 
 module.exports.addFeed = addFeed;
