@@ -87,13 +87,12 @@ function latest(slug, channel){
                             let episodeTitle = items[i].getElementsByTagName("title")[0].textContent;
                             let link = items[i].getElementsByTagName("link")[0].textContent;
                             let description = items[i].getElementsByTagName("description")[0].textContent;
-                            let images = response.getElementsByTagName("image");
-                            let image;
-                            for(let i = 0; i < images.length; i++){
-                                if(images[i].getElementsByTagName("width").length != 0) continue;
-                                image = images[i].getElementsByTagName("url")[0].textContent;
+                            let image = response.getElementsByTagName("itunes:image")[0].getAttribute("href");
+                            if(!image)
+                            {
+                                let images = response.getElementsByTagName("image");
+                                image = findBestImage(images);
                             }
-                            if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
                             description = formatForEmbed(description);
                             description = he.decode(description);
                             embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
@@ -146,13 +145,12 @@ function checkForUpdates(channel){
                                 let episodeTitle = items[i].getElementsByTagName("title")[0].textContent;
                                 let link = items[i].getElementsByTagName("link")[0].textContent;
                                 let description = items[i].getElementsByTagName("description")[0].textContent;
-                                let images = response.getElementsByTagName("image");
-                                let image;
-                                for(let i = 0; i < images.length; i++){
-                                    if(images[i].getElementsByTagName("width").length != 0) continue;
-                                    image = images[i].getElementsByTagName("url")[0].textContent;
+                                let image = response.getElementsByTagName("itunes:image")[0].getAttribute("href");
+                                if(!image)
+                                {
+                                    let images = response.getElementsByTagName("image");
+                                    image = findBestImage(images);
                                 }
-                                if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
                                 description = formatForEmbed(description);
                                 description = he.decode(description);
                                 embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
@@ -282,6 +280,15 @@ function applyLinksToText(sectioned){
         }
     }
     return output;
+}
+
+function findBestImage(images){
+    let image;
+    for(let i = 0; i < images.length; i++){
+        if(images[i].getElementsByTagName("width").length != 0) continue;
+        image = images[i].getElementsByTagName("url")[0].textContent;
+    }
+    return image;
 }
 
 function formatForEmbed(textContent){
