@@ -94,7 +94,6 @@ function latest(slug, channel){
                             }
                             if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
                             description = formatForEmbed(description);
-                            // description = cleanText(description);
                             description = he.decode(description);
                             embed.setTitle(title).setURL(link).setDescription(description).setImage(image);
                             channel.send(`Latest episode of ${title}:`);
@@ -195,65 +194,9 @@ function isEpisode(item)
     return false;
 }
 
-function cleanText(textContent){
-    let output = "";
-    let inTag = false;
-    let link = "";
-    for(let i = 0; i < textContent.length; i++){
-        if(textContent[i] == '<'){
-            if(textContent.substring(i, i+9) == '<a href="'){
-                inTag = true;
-                i += 9;
-                for(var j = i; j < textContent.length; j++){
-                    if(textContent[j] != '"'){
-                        link += textContent[j];
-                        i++;
-                    }
-                    else break;
-                }
-                continue;
-            }
-            inTag = true;
-            continue;
-        }
-        if(inTag && textContent[i] != '>'){
-            continue;
-        }
-        if(inTag && textContent[i] == '>'){
-            inTag = false;
-            continue;
-        }
-        output += textContent[i];
-    }
-    return output;
-}
-
-function removeNonAnchorTags(textContent){
-    let output = "";
-    let inTag = false;
-    let inAnchor = false;
-    for(let i = 0; i < textContent.length; i++){
-        if(textContent[i] == "<"){
-            inTag = true;
-            if(textContent.substring(i+1, i+3) == "a " || textContent.substring(i+1, i+3) == "/a"){
-                inAnchor = true;
-                output += textContent[i];
-            }
-            continue;
-        }
-        if(textContent[i] == ">"){
-            if(inAnchor) output += textContent[i];
-            inTag = false;
-            inAnchor = false;
-            continue;
-        }
-        if(inTag && inAnchor || !inTag) output += textContent[i];
-    }
-    return output;
-}
-
-function divideIntoSections(textContent){
+function prepareForFormatting(textContent){
     let output = [];
+    let inAnchor = false;
     for(let i = 0; i < textContent.length; i++){
         if(textContent[i] == '<'){
             if(textContent.substring(i, i + 4) == "</a>")
@@ -261,8 +204,15 @@ function divideIntoSections(textContent){
                 let section = {type: "anchorEnd"};
                 output.push(section);
                 i += 3;
+                inAnchor = false;
                 continue;
             }
+            if(textContent.substring(i+1, i+3) != "a " && textContent.substring(i+1, i+3) != "/a"){
+                inAnchor = false;
+                while(textContent[i] != '>') i++;
+                continue;
+            }
+            inAnchor = true;
             for(let j = i; textContent[j-1] != '"'; j++){
                 i++;
             }
@@ -286,6 +236,14 @@ function divideIntoSections(textContent){
         let section = {type: "text", text: contents}
         i--;
         output.push(section);
+    }
+    for(let i = 0; i < output.length - 1; i++){
+        if(output[i].type == "text" && output[i+1].type == "text"){
+            output[i].text += output[i+1].text;
+            let start = output.slice(0, i+1);
+            let end = output.slice(i+2, output.length);
+            output = start.concat(end);
+        }
     }
     return output;
 }
@@ -311,9 +269,8 @@ function applyLinksToText(sectioned){
 }
 
 function formatForEmbed(textContent){
-    let anchorsOnly = removeNonAnchorTags(textContent);
-    let sectioned = divideIntoSections(anchorsOnly);
-    let formatted = applyLinksToText(sectioned);
+    let prepared = prepareForFormatting(textContent);
+    let formatted = applyLinksToText(prepared);
     return formatted;
 }
 
