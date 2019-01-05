@@ -3,6 +3,7 @@ const MongoClient = require('mongodb').MongoClient
 const mongourl = "mongodb://localhost:27017/bot";
 var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 var DOMParser = require("domparser").DOMParser;
+const he = require("he");
 
 var xhttp = new XMLHttpRequest();
 var parser = new DOMParser();
@@ -82,14 +83,20 @@ function latest(slug, channel){
                     for(let i = 0; i < items.length; i++){
                         if(isEpisode(items[i])){
                             let embed = new Discord.RichEmbed();
-                            let title = items[i].getElementsByTagName("title")[0].textContent;
+                            let title = response.getElementsByTagName("channel")[0].getElementsByTagName("title")[0].textContent;
                             let link = items[i].getElementsByTagName("link")[0].textContent;
                             let description = items[i].getElementsByTagName("description")[0].textContent;
-                            description = cleanText(description);
-                            let temp = document.createElement("textarea");
-                            temp.innerHTML = description;
-                            description = temp.innerHTML;
-                            embed.setTitle(title).setURL(link).setDescription(cleanText(description));
+                            let images = response.getElementsByTagName("image");
+                            let image;
+                            for(let i = 0; i < images.length; i++){
+                                if(images[i].getElementsByTagName("width").length != 0) continue;
+                                image = images[i].getElementsByTagName("url")[0].textContent;
+                            }
+                            if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
+                            description = formatForEmbed(description);
+                            // description = cleanText(description);
+                            description = he.decode(description);
+                            embed.setTitle(title).setURL(link).setDescription(description).setImage(image);
                             channel.send(`Latest episode of ${title}:`);
                             channel.send(embed);
                             return;
@@ -191,8 +198,21 @@ function isEpisode(item)
 function cleanText(textContent){
     let output = "";
     let inTag = false;
+    let link = "";
     for(let i = 0; i < textContent.length; i++){
         if(textContent[i] == '<'){
+            if(textContent.substring(i, i+9) == '<a href="'){
+                inTag = true;
+                i += 9;
+                for(var j = i; j < textContent.length; j++){
+                    if(textContent[j] != '"'){
+                        link += textContent[j];
+                        i++;
+                    }
+                    else break;
+                }
+                continue;
+            }
             inTag = true;
             continue;
         }
@@ -206,6 +226,95 @@ function cleanText(textContent){
         output += textContent[i];
     }
     return output;
+}
+
+function removeNonAnchorTags(textContent){
+    let output = "";
+    let inTag = false;
+    let inAnchor = false;
+    for(let i = 0; i < textContent.length; i++){
+        if(textContent[i] == "<"){
+            inTag = true;
+            if(textContent.substring(i+1, i+3) == "a " || textContent.substring(i+1, i+3) == "/a"){
+                inAnchor = true;
+                output += textContent[i];
+            }
+            continue;
+        }
+        if(textContent[i] == ">"){
+            if(inAnchor) output += textContent[i];
+            inTag = false;
+            inAnchor = false;
+            continue;
+        }
+        if(inTag && inAnchor || !inTag) output += textContent[i];
+    }
+    return output;
+}
+
+function divideIntoSections(textContent){
+    let output = [];
+    for(let i = 0; i < textContent.length; i++){
+        if(textContent[i] == '<'){
+            if(textContent.substring(i, i + 4) == "</a>")
+            {
+                let section = {type: "anchorEnd"};
+                output.push(section);
+                i += 3;
+                continue;
+            }
+            for(let j = i; textContent[j-1] != '"'; j++){
+                i++;
+            }
+            let contents = "";
+            for(let j = i; textContent.substring(j, j+2) != '" ' && textContent.substring(j, j+2) != '">'; j++){
+                contents += textContent[j];
+                i++;
+            }
+            let section = {type: "anchorLink", text: contents};
+            for(let j = i; textContent[j] != '>'; j++){
+                i++;
+            }
+            output.push(section);
+            continue;
+        }
+        let contents = "";
+        for(let j = i; textContent[j] != '<'; j++){
+            contents += textContent[j];
+            i++;
+        }
+        let section = {type: "text", text: contents}
+        i--;
+        output.push(section);
+    }
+    return output;
+}
+
+function applyLinksToText(sectioned){
+    let output = "";
+    for(let i = 0; i < sectioned.length; i++){
+        if(sectioned[i].type == "text" && i == 0){
+            output += sectioned[i].text;
+        }
+        else if(sectioned[i].type == "text" && sectioned[i-1].type == "anchorLink"){
+            output += '[';
+            output += sectioned[i].text;
+            output += '](';
+            output += sectioned[i-1].text;
+            output += ')';
+        }
+        else if(sectioned[i].type == "text" && sectioned[i-1].type == "anchorEnd"){
+            output += sectioned[i].text;
+        }
+    }
+    return output;
+}
+
+function formatForEmbed(textContent){
+    let anchorsOnly = removeNonAnchorTags(textContent);
+    let sectioned = divideIntoSections(anchorsOnly);
+    let formatted = applyLinksToText(sectioned);
+    return formatted;
 }
 
 module.exports.addFeed = addFeed;
