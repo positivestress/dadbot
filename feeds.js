@@ -82,8 +82,9 @@ function latest(slug, channel){
                     let items = response.getElementsByTagName("item");
                     for(let i = 0; i < items.length; i++){
                         if(isEpisode(items[i])){
-                            let embed = new Discord.RichEmbed();
-                            let title = response.getElementsByTagName("channel")[0].getElementsByTagName("title")[0].textContent;
+                            let embed = new Discord.RichEmbed().setColor(0x9999FF);
+                            let podcastTitle = response.getElementsByTagName("channel")[0].getElementsByTagName("title")[0].textContent;
+                            let episodeTitle = items[i].getElementsByTagName("title")[0].textContent;
                             let link = items[i].getElementsByTagName("link")[0].textContent;
                             let description = items[i].getElementsByTagName("description")[0].textContent;
                             let images = response.getElementsByTagName("image");
@@ -95,8 +96,8 @@ function latest(slug, channel){
                             if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
                             description = formatForEmbed(description);
                             description = he.decode(description);
-                            embed.setTitle(title).setURL(link).setDescription(description).setImage(image);
-                            channel.send(`Latest episode of ${title}:`);
+                            embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
+                            channel.send(`Latest episode of ${podcastTitle}:`);
                             channel.send(embed);
                             return;
                         }
@@ -139,9 +140,24 @@ function checkForUpdates(channel){
                         dbo.collection("feeds").findOne({title: title}).then(res => {
                             let newest = items[i].getElementsByTagName("pubDate")[0].textContent;
                             if(newest != res.lastUpdated){
-                                let episodeLink = items[i].getElementsByTagName("link")[0].textContent;
-                                channel.send(`New episode of ${title}! ${episodeLink}`);
+                                channel.send(`New episode of ${title}!`);
                                 dbo.collection("feeds").updateOne({title: title}, {$set: {lastUpdated: newest}});
+                                let embed = new Discord.RichEmbed().setColor(0x9999FF);
+                                let episodeTitle = items[i].getElementsByTagName("title")[0].textContent;
+                                let link = items[i].getElementsByTagName("link")[0].textContent;
+                                let description = items[i].getElementsByTagName("description")[0].textContent;
+                                let images = response.getElementsByTagName("image");
+                                let image;
+                                for(let i = 0; i < images.length; i++){
+                                    if(images[i].getElementsByTagName("width").length != 0) continue;
+                                    image = images[i].getElementsByTagName("url")[0].textContent;
+                                }
+                                if(!image) image = images[0].getElementsByTagName("url")[0].textContent;
+                                description = formatForEmbed(description);
+                                description = he.decode(description);
+                                embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
+                                channel.send(embed);
+                                return;
                             }
                         });
                     });
