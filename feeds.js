@@ -25,6 +25,10 @@ function addFeed(input, channel)
                     if(isEpisode(items[i]))
                     {
                         MongoClient.connect(mongourl, (err, db) => {
+                            if(err){
+                                channel.send("Oops! Something fucked up!");
+                                return;
+                            }
                             let dbo = db.db("bot");
                             dbo.collection("feeds").findOne({slug: toAdd.slug}).then(res => {
                                 if(res){
@@ -54,6 +58,10 @@ function addFeed(input, channel)
 
 function removeFeed(input, channel){
     MongoClient.connect(mongourl, (err, db) => {
+        if(err){
+            channel.send("Oops! Something fucked up!");
+            return;
+        }
         let dbo = db.db("bot");
         dbo.collection("feeds").findOne({slug: input})
         .then(response => {
@@ -68,6 +76,10 @@ function removeFeed(input, channel){
 
 function latest(slug, channel){
     MongoClient.connect(mongourl, (err, db) => {
+        if(err){
+            channel.send("Oops! Something fucked up!");
+            return;
+        }
         let dbo = db.db("bot");
         dbo.collection("feeds").findOne({slug: slug})
         .then(response => { 
@@ -111,6 +123,10 @@ function latest(slug, channel){
 
 function list(channel){
     MongoClient.connect(mongourl, (err, db) => {
+        if(err){
+            channel.send("Oops! Something fucked up!");
+            return;
+        }
         let dbo = db.db("bot");
         let output = "";
         let embed = new Discord.RichEmbed().setColor(0x9999FF).setTitle("Podcasts");
@@ -135,6 +151,9 @@ function checkForUpdates(channel){
                 if(isEpisode(items[i]))
                 {
                     MongoClient.connect(mongourl, (err, db) => {
+                        if(err){
+                            return;
+                        }
                         let dbo = db.db("bot");
                         dbo.collection("feeds").findOne({title: title}).then(res => {
                             let newest = items[i].getElementsByTagName("pubDate")[0].textContent;
