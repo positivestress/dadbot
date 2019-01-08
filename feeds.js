@@ -41,6 +41,10 @@ function addFeed(input, channel)
                                     toAdd.lastUpdated = items[i].getElementsByTagName("pubDate")[0].textContent;
                                     dbo.collection("feeds").insert(toAdd);
                                     channel.send(`Successfully added ${toAdd.slug}.`);
+                                    delete db;
+                                    delete dbo;
+                                    delete res;
+                                    delete xhttp;
                                     return;
                                 }
                             });
@@ -69,6 +73,9 @@ function removeFeed(input, channel){
             else{
                 dbo.collection("feeds").remove({slug: input});
                 channel.send("Feed removed.");
+                delete db;
+                delete dbo;
+                delete res;
             }
         });
     });
@@ -85,6 +92,9 @@ function latest(slug, channel){
         .then(response => { 
             if(!response){
                 channel.send(`There is no feed with the title "${slug}".`);
+                delete db;
+                delete dbo;
+                delete res;
                 return;
             }
             let url = response.feedURL;
@@ -110,6 +120,10 @@ function latest(slug, channel){
                             embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
                             channel.send(`Latest episode of ${podcastTitle}:`);
                             channel.send(embed);
+                            delete db;
+                            delete dbo;
+                            delete res;
+                            delete xhttp;
                             return;
                         }
                     }
@@ -135,6 +149,8 @@ function list(channel){
         }).then(() => {
             embed.setDescription(output);
             channel.send(embed);
+            delete db;
+            delete dbo;
         });
     });
 }
@@ -174,6 +190,10 @@ function checkForUpdates(channel){
                                 description = he.decode(description);
                                 embed.setTitle(episodeTitle).setURL(link).setDescription(description).setImage(image);
                                 channel.send(embed);
+                                delete db;
+                                delete dbo;
+                                delete res;
+                                delete this;
                                 return;
                             }
                         });
